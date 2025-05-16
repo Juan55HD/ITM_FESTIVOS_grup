@@ -1,9 +1,12 @@
 ﻿using apiFestivos.Aplicacion.Servicios;
 using apiFestivos.Core.Interfaces.Repositorios;
+using apiFestivos.Dominio.DTOs;
 using apiFestivos.Dominio.Entidades;
+using Microsoft.Win32.SafeHandles;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -51,4 +54,83 @@ namespace apiFestivos.Test
             Assert.False(resultado);
         }
     }
+
+
+    public class FestivoServicio_obternerFest_Test
+    {
+        private FestivoServicio CrearServicio()
+        {
+            var mockRepo = new Mock<IFestivoRepositorio>();
+            return new FestivoServicio(mockRepo.Object);
+
+        }
+
+        [Fact]
+        public void ObtenerFestivo_Tipo1()
+        {
+
+            var servicio = CrearServicio();
+            var festivo = new Festivo
+            {
+                Dia = 1,
+                Mes = 1,
+                Nombre = "Año Nuevo",
+                IdTipo = 1
+            };
+            // Act
+            var metodo = servicio.GetType().GetMethod("ObtenerFestivo", BindingFlags.NonPublic | BindingFlags.Instance);
+            var resultado = (FechaFestivo)metodo.Invoke(servicio, new object[] { 2025, festivo });
+
+            // Assert
+
+            Assert.Equal(new DateTime(2025, 1, 1), resultado.Fecha);
+            Assert.Equal("Año Nuevo", resultado.Nombre);
+
+        }
+
+        [Fact]
+        public void ObtenerFestivo_Tipo2()
+        {
+            var servicio = CrearServicio();
+            var festivo = new Festivo
+            {
+                Dia = 19,
+                Mes = 3,
+                Nombre = "San José",
+                IdTipo = 2
+            };
+
+            var metodo = servicio.GetType().GetMethod("ObtenerFestivo", BindingFlags.NonPublic | BindingFlags.Instance);
+            var resultado = (FechaFestivo)metodo.Invoke(servicio, new object[] { 2025, festivo });
+
+            Assert.Equal(DayOfWeek.Monday, resultado.Fecha.DayOfWeek);
+            Assert.True (resultado.Fecha > new DateTime(2025,3,19));
+
+
+        }
+
+        [Fact]
+        public void ObtenerFestivo_Tipo4()
+        {
+            var servicio = CrearServicio();
+            var festivo = new Festivo
+            {
+                DiasPascua = 68,//SAGRADO CORAZON 
+                Nombre = "Sagrado Corazón",
+                IdTipo = 4
+            };
+            var metodo = servicio.GetType().GetMethod("ObtenerFestivo", BindingFlags.NonPublic | BindingFlags.Instance);
+            var resultado = (FechaFestivo)metodo.Invoke(servicio, new object[] { 2025, festivo });
+
+            // Assert
+            Assert.Equal(DayOfWeek.Monday, resultado.Fecha.DayOfWeek);
+            Assert.Equal("Sagrado Corazón", resultado.Nombre);
+
+        }
+
+
+
+    }
+
+
 }
